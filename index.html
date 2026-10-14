@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gearsdle - Gears of War Daily Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <h1>⚙️ GEARSDLE ⚙️</h1>
+            <p>The Ultimate Gears of War Guessing Game</p>
+        </header>
+        
+        <nav id="mode-select">
+            <button class="mode-btn active" onclick="setMode('classic')">Classic</button>
+            <button class="mode-btn" onclick="setMode('quote')">Quote</button>
+            <button class="mode-btn" onclick="setMode('weapon')">Weapon</button>
+        </nav>
+
+        <main id="game-box">
+            <!-- Game dynamic content goes here -->
+            <div id="game-prompt">Loading game data...</div>
+            <input type="text" id="guess-input" placeholder="Type your guess...">
+            <button id="submit-guess" onclick="checkGuess()">Guess</button>
+            <div id="feedback-grid"></div>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
