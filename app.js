@@ -1,12 +1,4 @@
 // ==========================================
-// GEARSDLE - GAME DATA
-// ==========================================
-
-// ==========================================
-// GEARSDLE - EXPANDED ROSTER DATA
-// ==========================================
-
-// ==========================================
 // GEARSDLE - ULTIMATE MASSIVE DATA REGISTRY
 // ==========================================
 
@@ -130,185 +122,129 @@ const gameData = {
         { name: "Mulcher", type: "Heavy", ammo: "Chaingun", execution: "Shred" },
         { name: "Cryo Cannon", type: "Heavy", ammo: "Liquid Nitrogen", execution: "Shatter" },
         { name: "Bolo Grenade", type: "Grenade", ammo: "Explosive", execution: "Tag" },
-
-
+        { name: "Ink Grenade", type: "Grenade", ammo: "Poison Gas", execution: "Choke" }
+]
+};
 // ==========================================
 // GAME STATE MANAGEMENT
 // ==========================================
-
 let currentMode = 'classic';
 let secretAnswer = null;
-
-// Starts a new game based on selected mode
 function initGame() {
-    const pool = gameData[currentMode];
-    // Pick a random secret item from the selected category pool
-    secretAnswer = pool[Math.floor(Math.random() * pool.length)];
-    
-    const promptDiv = document.getElementById("game-prompt");
-    const feedbackGrid = document.getElementById("feedback-grid");
-    feedbackGrid.innerHTML = ""; // Clear old entries
-    
-    if (currentMode === 'classic') {
-        promptDiv.innerHTML = "<strong>Classic Mode:</strong> Guess the hidden character! (e.g., Marcus Fenix, General RAAM)";
-    } else if (currentMode === 'quote') {
-        promptDiv.innerHTML = `<strong>Quote Mode:</strong> Who said: <br><br><em>"${secretAnswer.text}"</em>`;
-    } else if (currentMode === 'weapon') {
-        promptDiv.innerHTML = "<strong>Weapon Mode:</strong> Guess the weapon! (e.g., Lancer, Gnasher)";
-    }
+const pool = gameData[currentMode];
+secretAnswer = pool[Math.floor(Math.random() * pool.length)];
+const promptDiv = document.getElementById("game-prompt");
+const feedbackGrid = document.getElementById("feedback-grid");
+document.getElementById("guess-input").value = "";
+document.getElementById("autocomplete-list").innerHTML = "";
+feedbackGrid.innerHTML = "";
+if (currentMode === 'classic') {
+promptDiv.innerHTML = "Classic Mode: Guess the hidden character! (e.g., Marcus Fenix, General RAAM)";
+} else if (currentMode === 'quote') {
+promptDiv.innerHTML = <strong>Quote Mode:</strong> Who said: <br><br><em>"${secretAnswer.text}"</em>;
+} else if (currentMode === 'weapon') {
+promptDiv.innerHTML = "Weapon Mode: Guess the weapon! (e.g., Lancer, Gnasher)";
 }
-
-// Switches between navigation tabs
+}
 function setMode(mode) {
-    currentMode = mode;
-    
-    // Manage UI active classes
-    document.querySelectorAll(".mode-btn").forEach(btn => btn.classList.remove("active"));
-    event.target.classList.add("active");
-    
-    initGame();
+currentMode = mode;
+if(event && event.target) {
+document.querySelectorAll(".mode-btn").forEach(btn => btn.classList.remove("active"));
+event.target.classList.add("active");
 }
-
-// ==========================================
-// GUESS PROCESSING & FEEDBACK
-// ==========================================
-
-// ==========================================
-// GUESS PROCESSING & FEEDBACK (UPDATED FOR YELLOW MATCHES)
-// ==========================================
-
-function checkGuess() {
-    const inputEl = document.getElementById("guess-input");
-    const userGuess = inputEl.value.trim().toLowerCase();
-    const feedbackGrid = document.getElementById("feedback-grid");
-    
-    if (!userGuess) return;
-    
-    const matchPool = currentMode === 'quote' ? gameData['classic'] : gameData[currentMode];
-    const itemFound = matchPool.find(item => item.name?.toLowerCase() === userGuess);
-
-    if (currentMode !== 'quote' && !itemFound) {
-        alert("Item not found in our database! Use the dropdown menu suggestions.");
-        return;
-    }
-
-    const row = document.createElement("div");
-    row.style.display = "flex";
-    row.style.justifyContent = "center";
-    row.style.marginTop = "10px";
-
-    if (currentMode === 'classic') {
-        // Exact Name Check
-        createTile(row, itemFound.name, itemFound.name === secretAnswer.name ? "correct" : "incorrect");
-        
-        // Faction Check (Green if identical, Yellow if both are non-COG or related variants)
-        let factionStatus = "incorrect";
-        if (itemFound.faction === secretAnswer.faction) factionStatus = "correct";
-        else if ((itemFound.faction === "Locust" && secretAnswer.faction === "Swarm") || 
-                 (itemFound.faction === "Swarm" && secretAnswer.faction === "Locust")) factionStatus = "partial";
-        createTile(row, itemFound.faction, factionStatus);
-        
-        // Species Check (Green if identical, Yellow if Human vs Human-Hybrid)
-        let speciesStatus = "incorrect";
-        if (itemFound.species === secretAnswer.species) speciesStatus = "correct";
-        else if (itemFound.species.includes("Human") && secretAnswer.species.includes("Human")) speciesStatus = "partial";
-        createTile(row, itemFound.species, speciesStatus);
-        
-        // Appearance / Timeline Check (Green if same game, Yellow if original trilogy [Gears 1-3])
-        let appStatus = "incorrect";
-        const trilogy = ["Gears 1", "Gears 2", "Gears 3"];
-        if (itemFound.appearance === secretAnswer.appearance) appStatus = "correct";
-        else if (trilogy.includes(itemFound.appearance) && trilogy.includes(secretAnswer.appearance)) appStatus = "partial";
-        createTile(row, itemFound.appearance, appStatus);
-        
-        // Status Check
-        createTile(row, itemFound.status, itemFound.status === secretAnswer.status ? "correct" : "incorrect");
-        
-    } else if (currentMode === 'quote') {
-        const isCorrect = userGuess === secretAnswer.answer.toLowerCase();
-        createTile(row, inputEl.value, isCorrect ? "correct" : "incorrect");
-        
-    } else if (currentMode === 'weapon') {
-        createTile(row, itemFound.name, itemFound.name === secretAnswer.name ? "correct" : "incorrect");
-        
-        // Weapon Type Check
-        createTile(row, itemFound.type, itemFound.type === secretAnswer.type ? "correct" : "incorrect");
-        
-        // Ammo Type Check (Green if same ammo, Yellow if both are bullet variants like Bullet / Heavy Bullet / Auto Bullet)
-        let ammoStatus = "incorrect";
-        if (itemFound.ammo === secretAnswer.ammo) ammoStatus = "correct";
-        else if (itemFound.ammo.includes("Bullet") && secretAnswer.ammo.includes("Bullet")) ammoStatus = "partial";
-        createTile(row, itemFound.ammo, ammoStatus);
-        
-        createTile(row, itemFound.execution, itemFound.execution === secretAnswer.execution ? "correct" : "incorrect");
-    }
-
-    feedbackGrid.prepend(row);
-    inputEl.value = ""; 
-    document.getElementById("autocomplete-list").innerHTML = ""; // Clear suggestions
-
-    // Check Win State
-    if (userGuess === (secretAnswer.name || secretAnswer.answer).toLowerCase()) {
-        setTimeout(() => alert("💥 GRINDING SUCCESS! You guessed it right!"), 200);
-    }
+initGame();
 }
-
-// Helper utility to make grid squares with 3 states: correct, partial, incorrect
-function createTile(row, text, status) {
-    const tile = document.createElement("div");
-    tile.innerText = text;
-    tile.style.padding = "10px";
-    tile.style.margin = "2px";
-    tile.style.border = "1px solid #444";
-    tile.style.minWidth = "90px";
-    tile.style.fontWeight = "bold";
-    tile.style.fontSize = "12px";
-    
-    // Assign color classes dynamically
-    tile.className = status; 
-    row.appendChild(tile);
-}
-
-
-// Initialize the program on window boot
-window.onload = initGame;
 // ==========================================
 // AUTOCOMPLETE SUGGESTIONS LOGIC
 // ==========================================
-
 function showSuggestions() {
-    const input = document.getElementById("guess-input");
-    const filter = input.value.toLowerCase();
-    const listContainer = document.getElementById("autocomplete-list");
-    
-    // Clear any existing suggestions
-    listContainer.innerHTML = "";
-    
-    if (!filter) return false;
-
-    // Get the correct pool of choices based on active mode
-    const matchPool = currentMode === 'quote' ? gameData['classic'] : gameData[currentMode];
-    
-    // Filter items matching what the user typed
-    matchPool.forEach(item => {
-        if (item.name.toLowerCase().includes(filter)) {
-            const suggestionItem = document.createElement("div");
-            suggestionItem.innerHTML = item.name;
-            
-            // When user clicks a suggestion, fill input and clear dropdown
-            suggestionItem.addEventListener("click", function() {
-                input.value = this.innerText;
-                listContainer.innerHTML = "";
-            });
-            
-            listContainer.appendChild(suggestionItem);
-        }
-    });
-}
-
-// Close the autocomplete dropdown if the user clicks anywhere else on the screen
-document.addEventListener("click", function (e) {
-    if (e.target.id !== "guess-input") {
-        document.getElementById("autocomplete-list").innerHTML = "";
-    }
+const input = document.getElementById("guess-input");
+const filter = input.value.toLowerCase();
+const listContainer = document.getElementById("autocomplete-list");
+listContainer.innerHTML = "";
+if (!filter) return false;
+const matchPool = currentMode === 'quote' ? gameData['classic'] : gameData[currentMode];
+matchPool.forEach(item => {
+if (item.name && item.name.toLowerCase().includes(filter)) {
+const suggestionItem = document.createElement("div");
+suggestionItem.innerHTML = item.name;
+suggestionItem.addEventListener("click", function() {
+input.value = this.innerText;
+listContainer.innerHTML = "";
 });
+listContainer.appendChild(suggestionItem);
+}
+});
+}
+document.addEventListener("click", function (e) {
+if (e.target.id !== "guess-input") {
+document.getElementById("autocomplete-list").innerHTML = "";
+}
+});
+// ==========================================
+// GUESS PROCESSING & FEEDBACK (WITH YELLOWS)
+// ==========================================
+function checkGuess() {
+const inputEl = document.getElementById("guess-input");
+const userGuess = inputEl.value.trim().toLowerCase();
+const feedbackGrid = document.getElementById("feedback-grid");
+if (!userGuess) return;
+const matchPool = currentMode === 'quote' ? gameData['classic'] : gameData[currentMode];
+const itemFound = matchPool.find(item => item.name?.toLowerCase() === userGuess);
+if (currentMode !== 'quote' && !itemFound) {
+alert("Item not found in our database! Use the dropdown menu suggestions.");
+return;
+}
+const row = document.createElement("div");
+row.style.display = "flex";
+row.style.justifyContent = "center";
+row.style.marginTop = "10px";
+if (currentMode === 'classic') {
+createTile(row, itemFound.name, itemFound.name === secretAnswer.name ? "correct" : "incorrect");
+let factionStatus = "incorrect";
+if (itemFound.faction === secretAnswer.faction) factionStatus = "correct";
+else if ((itemFound.faction === "Locust" && secretAnswer.faction === "Swarm") ||
+(itemFound.faction === "Swarm" && secretAnswer.faction === "Locust")) factionStatus = "partial";
+createTile(row, itemFound.faction, factionStatus);
+let speciesStatus = "incorrect";
+if (itemFound.species === secretAnswer.species) speciesStatus = "correct";
+else if (itemFound.species.includes("Human") && secretAnswer.species.includes("Human")) speciesStatus = "partial";
+createTile(row, itemFound.species, speciesStatus);
+let appStatus = "incorrect";
+const trilogy = ["Gears 1", "Gears 2", "Gears 3"];
+if (itemFound.appearance === secretAnswer.appearance) appStatus = "correct";
+else if (trilogy.includes(itemFound.appearance) && trilogy.includes(secretAnswer.appearance)) appStatus = "partial";
+createTile(row, itemFound.appearance, appStatus);
+createTile(row, itemFound.status, itemFound.status === secretAnswer.status ? "correct" : "incorrect");
+} else if (currentMode === 'quote') {
+const isCorrect = userGuess === secretAnswer.answer.toLowerCase();
+createTile(row, inputEl.value, isCorrect ? "correct" : "incorrect");
+} else if (currentMode === 'weapon') {
+createTile(row, itemFound.name, itemFound.name === secretAnswer.name ? "correct" : "incorrect");
+createTile(row, itemFound.type, itemFound.type === secretAnswer.type ? "correct" : "incorrect");
+let ammoStatus = "incorrect";
+if (itemFound.ammo === secretAnswer.ammo) ammoStatus = "correct";
+else if (itemFound.ammo.includes("Bullet") && secretAnswer.ammo.includes("Bullet")) ammoStatus = "partial";
+createTile(row, itemFound.ammo, ammoStatus);
+createTile(row, itemFound.execution, itemFound.execution === secretAnswer.execution ? "correct" : "incorrect");
+}
+feedbackGrid.prepend(row);
+inputEl.value = "";
+document.getElementById("autocomplete-list").innerHTML = "";
+if (userGuess === (secretAnswer.name || secretAnswer.answer).toLowerCase()) {
+setTimeout(() => alert("💥 GRINDING SUCCESS! You guessed it right!"), 200);
+}
+}
+function createTile(row, text, status) {
+const tile = document.createElement("div");
+tile.innerText = text;
+tile.style.padding = "10px";
+tile.style.margin = "2px";
+tile.style.border = "1px solid #444";
+tile.style.minWidth = "90px";
+tile.style.fontWeight = "bold";
+tile.style.fontSize = "12px";
+tile.className = status;
+row.appendChild(tile);
+}
+window.onload = initGame;
