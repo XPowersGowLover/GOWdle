@@ -19,12 +19,19 @@
             <button class="mode-btn" onclick="setMode('weapon')">Weapon</button>
         </nav>
 
-        <main id="game-box">
-            <!-- Game dynamic content goes here -->
+             <main id="game-box">
             <div id="game-prompt">Loading game data...</div>
-            <input type="text" id="guess-input" placeholder="Type your guess...">
+            
+            <!-- Wrapper to safely handle absolute dropdown positioning -->
+            <div style="position: relative; max-width: 60%; margin: 0 auto;">
+                <input type="text" id="guess-input" placeholder="Type your guess..." oninput="showSuggestions()">
+                <div id="autocomplete-list" class="autocomplete-items"></div>
+            </div>
+            
             <button id="submit-guess" onclick="checkGuess()">Guess</button>
             <div id="feedback-grid"></div>
+        </main>
+
         </main>
     </div>
     <script src="app.js"></script>
