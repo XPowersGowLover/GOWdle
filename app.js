@@ -173,6 +173,10 @@ function setMode(mode) {
 // GUESS PROCESSING & FEEDBACK
 // ==========================================
 
+// ==========================================
+// GUESS PROCESSING & FEEDBACK (UPDATED FOR YELLOW MATCHES)
+// ==========================================
+
 function checkGuess() {
     const inputEl = document.getElementById("guess-input");
     const userGuess = inputEl.value.trim().toLowerCase();
@@ -180,13 +184,11 @@ function checkGuess() {
     
     if (!userGuess) return;
     
-    // Find the item matching user input
     const matchPool = currentMode === 'quote' ? gameData['classic'] : gameData[currentMode];
     const itemFound = matchPool.find(item => item.name?.toLowerCase() === userGuess);
 
-    // Dynamic Text Box validation
     if (currentMode !== 'quote' && !itemFound) {
-        alert("Item not found in our database! Try names like Marcus Fenix, General RAAM, Lancer, or Gnasher.");
+        alert("Item not found in our database! Use the dropdown menu suggestions.");
         return;
     }
 
@@ -196,28 +198,54 @@ function checkGuess() {
     row.style.marginTop = "10px";
 
     if (currentMode === 'classic') {
-        // Evaluate attributes: Name, Faction, Species, First Appearance, Status
-        createTile(row, itemFound.name, itemFound.name === secretAnswer.name);
-        createTile(row, itemFound.faction, itemFound.faction === secretAnswer.faction);
-        createTile(row, itemFound.species, itemFound.species === secretAnswer.species);
-        createTile(row, itemFound.appearance, itemFound.appearance === secretAnswer.appearance);
-        createTile(row, itemFound.status, itemFound.status === secretAnswer.status);
+        // Exact Name Check
+        createTile(row, itemFound.name, itemFound.name === secretAnswer.name ? "correct" : "incorrect");
+        
+        // Faction Check (Green if identical, Yellow if both are non-COG or related variants)
+        let factionStatus = "incorrect";
+        if (itemFound.faction === secretAnswer.faction) factionStatus = "correct";
+        else if ((itemFound.faction === "Locust" && secretAnswer.faction === "Swarm") || 
+                 (itemFound.faction === "Swarm" && secretAnswer.faction === "Locust")) factionStatus = "partial";
+        createTile(row, itemFound.faction, factionStatus);
+        
+        // Species Check (Green if identical, Yellow if Human vs Human-Hybrid)
+        let speciesStatus = "incorrect";
+        if (itemFound.species === secretAnswer.species) speciesStatus = "correct";
+        else if (itemFound.species.includes("Human") && secretAnswer.species.includes("Human")) speciesStatus = "partial";
+        createTile(row, itemFound.species, speciesStatus);
+        
+        // Appearance / Timeline Check (Green if same game, Yellow if original trilogy [Gears 1-3])
+        let appStatus = "incorrect";
+        const trilogy = ["Gears 1", "Gears 2", "Gears 3"];
+        if (itemFound.appearance === secretAnswer.appearance) appStatus = "correct";
+        else if (trilogy.includes(itemFound.appearance) && trilogy.includes(secretAnswer.appearance)) appStatus = "partial";
+        createTile(row, itemFound.appearance, appStatus);
+        
+        // Status Check
+        createTile(row, itemFound.status, itemFound.status === secretAnswer.status ? "correct" : "incorrect");
         
     } else if (currentMode === 'quote') {
-        // Exact name checking for quote mode
         const isCorrect = userGuess === secretAnswer.answer.toLowerCase();
-        createTile(row, inputEl.value, isCorrect);
+        createTile(row, inputEl.value, isCorrect ? "correct" : "incorrect");
         
     } else if (currentMode === 'weapon') {
-        // Evaluate weapon items
-        createTile(row, itemFound.name, itemFound.name === secretAnswer.name);
-        createTile(row, itemFound.type, itemFound.type === secretAnswer.type);
-        createTile(row, itemFound.ammo, itemFound.ammo === secretAnswer.ammo);
-        createTile(row, itemFound.execution, itemFound.execution === secretAnswer.execution);
+        createTile(row, itemFound.name, itemFound.name === secretAnswer.name ? "correct" : "incorrect");
+        
+        // Weapon Type Check
+        createTile(row, itemFound.type, itemFound.type === secretAnswer.type ? "correct" : "incorrect");
+        
+        // Ammo Type Check (Green if same ammo, Yellow if both are bullet variants like Bullet / Heavy Bullet / Auto Bullet)
+        let ammoStatus = "incorrect";
+        if (itemFound.ammo === secretAnswer.ammo) ammoStatus = "correct";
+        else if (itemFound.ammo.includes("Bullet") && secretAnswer.ammo.includes("Bullet")) ammoStatus = "partial";
+        createTile(row, itemFound.ammo, ammoStatus);
+        
+        createTile(row, itemFound.execution, itemFound.execution === secretAnswer.execution ? "correct" : "incorrect");
     }
 
     feedbackGrid.prepend(row);
-    inputEl.value = ""; // Reset input field
+    inputEl.value = ""; 
+    document.getElementById("autocomplete-list").innerHTML = ""; // Clear suggestions
 
     // Check Win State
     if (userGuess === (secretAnswer.name || secretAnswer.answer).toLowerCase()) {
@@ -225,17 +253,22 @@ function checkGuess() {
     }
 }
 
-// Helper utility to make grid grid squares
-function createTile(row, text, isCorrect) {
+// Helper utility to make grid squares with 3 states: correct, partial, incorrect
+function createTile(row, text, status) {
     const tile = document.createElement("div");
     tile.innerText = text;
     tile.style.padding = "10px";
     tile.style.margin = "2px";
     tile.style.border = "1px solid #444";
-    tile.style.minWidth = "80px";
-    tile.className = isCorrect ? "correct" : "incorrect";
+    tile.style.minWidth = "90px";
+    tile.style.fontWeight = "bold";
+    tile.style.fontSize = "12px";
+    
+    // Assign color classes dynamically
+    tile.className = status; 
     row.appendChild(tile);
 }
+
 
 // Initialize the program on window boot
 window.onload = initGame;
