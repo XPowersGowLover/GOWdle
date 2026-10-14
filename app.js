@@ -133,3 +133,43 @@ function createTile(row, text, isCorrect) {
 
 // Initialize the program on window boot
 window.onload = initGame;
+// ==========================================
+// AUTOCOMPLETE SUGGESTIONS LOGIC
+// ==========================================
+
+function showSuggestions() {
+    const input = document.getElementById("guess-input");
+    const filter = input.value.toLowerCase();
+    const listContainer = document.getElementById("autocomplete-list");
+    
+    // Clear any existing suggestions
+    listContainer.innerHTML = "";
+    
+    if (!filter) return false;
+
+    // Get the correct pool of choices based on active mode
+    const matchPool = currentMode === 'quote' ? gameData['classic'] : gameData[currentMode];
+    
+    // Filter items matching what the user typed
+    matchPool.forEach(item => {
+        if (item.name.toLowerCase().includes(filter)) {
+            const suggestionItem = document.createElement("div");
+            suggestionItem.innerHTML = item.name;
+            
+            // When user clicks a suggestion, fill input and clear dropdown
+            suggestionItem.addEventListener("click", function() {
+                input.value = this.innerText;
+                listContainer.innerHTML = "";
+            });
+            
+            listContainer.appendChild(suggestionItem);
+        }
+    });
+}
+
+// Close the autocomplete dropdown if the user clicks anywhere else on the screen
+document.addEventListener("click", function (e) {
+    if (e.target.id !== "guess-input") {
+        document.getElementById("autocomplete-list").innerHTML = "";
+    }
+});
